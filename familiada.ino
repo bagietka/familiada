@@ -1,10 +1,10 @@
 #define BTN_RESET 12
-#define BTN_BLUE 6
-#define LED_BLUE 7
-#define BTN_GREEN 8
+#define BTN_BLUE 2
+#define LED_BLUE 5
+#define BTN_GREEN 3
 #define LED_GREEN 9
 
-int currentColor = -1;
+volatile int state = HIGH;
 
 void setup() {
   pinMode(BTN_RESET, INPUT_PULLUP);
@@ -13,29 +13,35 @@ void setup() {
 
   pinMode(LED_BLUE, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
-      digitalWrite(LED_GREEN, HIGH);
-          digitalWrite(LED_BLUE, HIGH);
+
+  attachInterrupt(digitalPinToInterrupt(BTN_GREEN), setGreen, LOW);
+  attachInterrupt(digitalPinToInterrupt(BTN_BLUE), setBlue, LOW);
+
+  // Blink to show readiness
+  for (int i = 0; i < 6; i++)
+  {
+    digitalWrite(LED_BLUE, state);
+    digitalWrite(LED_GREEN, state);
+    delay(100);
+    state = !state;
+  }
+
+  state = -1;
 }
 
 void loop() {
-  if( digitalRead(BTN_BLUE) == LOW and currentColor == -1 )
+  if( state != -1 )
   {
-    currentColor = BTN_BLUE;
-    digitalWrite(LED_BLUE, HIGH);
+    digitalWrite(state, HIGH);
   }
-
-  if( digitalRead(BTN_GREEN) == LOW and currentColor == -1 )
+  
+  if( digitalRead(BTN_RESET) == LOW)
   {
-    currentColor = BTN_GREEN;
-    digitalWrite(LED_GREEN, HIGH);
-  }
-
-  if( digitalRead(BTN_RESET) == LOW )
-  {
-    currentColor = -1;
+    state = -1;
     digitalWrite(LED_GREEN, LOW);
     digitalWrite(LED_BLUE, LOW);
   }
-
 }
 
+void setGreen() { if ( state == -1 ) state = LED_GREEN; }
+void setBlue() { if ( state == -1 ) state = LED_BLUE; }
